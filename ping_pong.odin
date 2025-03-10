@@ -3,6 +3,7 @@ package ping_pong
 import "core:fmt"
 import "core:strconv"
 import "core:strings"
+import "core:time"
 import "vendor:sdl2"
 import "vendor:sdl2/ttf"
 
@@ -118,6 +119,45 @@ control_players :: proc(player_left: ^Player, player_right: ^Player, current_hei
 	}
 }
 
+render_text :: proc(
+	renderer: ^sdl2.Renderer,
+	player_left: ^Player,
+	player_right: ^Player,
+	current_width: i32,
+) {
+
+	_ = ttf.Init()
+	defer ttf.Quit()
+	font: ^ttf.Font = ttf.OpenFont(
+		"/home/quan/Documents/projects/odin/games/ping_pong/freesansbold.ttf",
+		40,
+	)
+	assert(font != nil, string(ttf.GetError()))
+
+	bytes: [1024]byte
+	builder := strings.builder_from_bytes(bytes[:])
+	strings.write_u64(&builder, player_left.points)
+	strings.write_string(&builder, " : ")
+	strings.write_u64(&builder, player_right.points)
+	text, err := strings.to_cstring(&builder)
+	if (err != nil) {
+		fmt.println(err)
+	}
+
+	font_surf := ttf.RenderText_Blended(font, text, fg)
+	ttf.CloseFont(font)
+	text_rect: sdl2.FRect = sdl2.FRect {
+		x = f32(current_width) / 2 - f32(font_surf.w) / 2,
+		y = 0,
+		w = f32(font_surf.w),
+		h = f32(font_surf.h),
+	}
+
+	text_image := sdl2.CreateTextureFromSurface(renderer, font_surf)
+	sdl2.FreeSurface(font_surf)
+	_ = sdl2.RenderCopyF(renderer, text_image, nil, &text_rect)
+}
+
 main :: proc() {
 	assert(sdl2.Init(sdl2.INIT_VIDEO) == 0, sdl2.GetErrorString())
 	defer sdl2.Quit()
@@ -188,36 +228,9 @@ main :: proc() {
 		_ = sdl2.SetRenderDrawColor(renderer, 0, 0, 0, 0)
 		_ = sdl2.RenderClear(renderer)
 
-		_ = ttf.Init()
-		font: ^ttf.Font = ttf.OpenFont(
-			"/home/quan/Documents/projects/odin/games/ping_pong/freesansbold.ttf",
-			40,
-		)
-		assert(font != nil, string(ttf.GetError()))
+		render_text(renderer, &player_left, &player_right, current_width)
 
-		bytes: [1024]byte
-		builder := strings.builder_from_bytes(bytes[:])
-		strings.write_u64(&builder, player_left.points)
-		strings.write_string(&builder, " : ")
-		strings.write_u64(&builder, player_right.points)
-		text, err := strings.to_cstring(&builder)
-		if (err != nil) {
-			fmt.println(err)
-		}
-
-		font_surf := ttf.RenderText_Blended(font, text, fg)
-		ttf.CloseFont(font)
-		text_rect: sdl2.FRect = sdl2.FRect {
-			x = f32(current_width) / 2 - f32(font_surf.w) / 2,
-			y = 0,
-			w = f32(font_surf.w),
-			h = f32(font_surf.h),
-		}
-
-		text_image := sdl2.CreateTextureFromSurface(renderer, font_surf)
-		sdl2.FreeSurface(font_surf)
-		defer ttf.Quit()
-
+		time.sleep(1000000)
 		if (ball.x + ball.diameter == f32(current_width)) {
 			player_left.points += 1
 			reset_positions(&player_left, &player_right, &ball, current_width, current_height)
@@ -265,7 +278,6 @@ main :: proc() {
 		render(ball, renderer)
 		render(player_left, renderer)
 		render(player_right, renderer)
-		_ = sdl2.RenderCopyF(renderer, text_image, nil, &text_rect)
 		sdl2.RenderPresent(renderer)
 	}
 }
