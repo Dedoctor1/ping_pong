@@ -3,7 +3,6 @@ package ping_pong
 import "core:fmt"
 import "core:strconv"
 import "core:strings"
-import "core:time"
 import "vendor:sdl2"
 import "vendor:sdl2/ttf"
 
@@ -189,37 +188,44 @@ main :: proc() {
 		_ = sdl2.SetRenderDrawColor(renderer, 0, 0, 0, 0)
 		_ = sdl2.RenderClear(renderer)
 
-		// font: ^ttf.Font = ttf.OpenFont("/lib/firefox/fonts/TwemojiMozilla.ttf", 40)
-		// assert(font != nil, string(ttf.GetError()))
-		//
-		// bytes: [1024]byte
-		// builder := strings.builder_from_bytes(bytes[:])
-		// strings.write_u64(&builder, player_left.points)
-		// strings.write_string(&builder, " : ")
-		// strings.write_u64(&builder, player_right.points)
-		// text, err := strings.to_cstring(&builder)
-		// if (err != nil) {
-		// 	fmt.println(err)
-		// }
-		//
-		// font_surf := ttf.RenderText_Blended(font, text, fg)
-		// ttf.CloseFont(font)
-		// text_rect: sdl2.FRect = sdl2.FRect {
-		// 	w = f32(font_surf.w),
-		// 	h = f32(font_surf.h),
-		// }
-		//
-		// text_image := sdl2.CreateTextureFromSurface(renderer, font_surf)
-		// sdl2.FreeSurface(font_surf)
+		_ = ttf.Init()
+		font: ^ttf.Font = ttf.OpenFont(
+			"/home/quan/Documents/projects/odin/games/ping_pong/freesansbold.ttf",
+			40,
+		)
+		assert(font != nil, string(ttf.GetError()))
+
+		bytes: [1024]byte
+		builder := strings.builder_from_bytes(bytes[:])
+		strings.write_u64(&builder, player_left.points)
+		strings.write_string(&builder, " : ")
+		strings.write_u64(&builder, player_right.points)
+		text, err := strings.to_cstring(&builder)
+		if (err != nil) {
+			fmt.println(err)
+		}
+
+		font_surf := ttf.RenderText_Blended(font, text, fg)
+		ttf.CloseFont(font)
+		text_rect: sdl2.FRect = sdl2.FRect {
+			x = f32(current_width) / 2 - f32(font_surf.w) / 2,
+			y = 0,
+			w = f32(font_surf.w),
+			h = f32(font_surf.h),
+		}
+
+		text_image := sdl2.CreateTextureFromSurface(renderer, font_surf)
+		sdl2.FreeSurface(font_surf)
+		defer ttf.Quit()
 
 		if (ball.x + ball.diameter == f32(current_width)) {
 			player_left.points += 1
 			reset_positions(&player_left, &player_right, &ball, current_width, current_height)
-			fmt.println(player_right.points, " : ", player_left.points)
+			fmt.println(player_left.points, " : ", player_right.points)
 		} else if (ball.x == 0) {
 			player_right.points += 1
 			reset_positions(&player_left, &player_right, &ball, current_width, current_height)
-			fmt.println(player_right.points, " : ", player_left.points)
+			fmt.println(player_left.points, " : ", player_right.points)
 		}
 
 
@@ -259,7 +265,7 @@ main :: proc() {
 		render(ball, renderer)
 		render(player_left, renderer)
 		render(player_right, renderer)
-		// _ = sdl2.RenderCopyF(renderer, text_image, nil, &text_rect)
+		_ = sdl2.RenderCopyF(renderer, text_image, nil, &text_rect)
 		sdl2.RenderPresent(renderer)
 	}
 }
