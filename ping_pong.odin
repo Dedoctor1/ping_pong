@@ -168,7 +168,7 @@ main :: proc() {
 		sdl2.WINDOWPOS_CENTERED,
 		640,
 		480,
-		sdl2.WINDOW_SHOWN,
+		sdl2.WINDOW_SHOWN | sdl2.WINDOW_FULLSCREEN,
 	)
 	assert(window != nil, sdl2.GetErrorString())
 	defer sdl2.DestroyWindow(window)
